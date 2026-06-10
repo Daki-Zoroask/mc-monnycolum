@@ -1,0 +1,194 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>MC รายรับรายจ่าย</title>
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+    <div class="app-container">
+        <!-- ส่วนหัวแอป -->
+        <header>
+            <h1>MC MonnyColum</h1>
+            <div class="data-actions">
+                <button id="exportBtn" class="btn-secondary">📥 เซฟไฟล์</button>
+                <button id="importBtn" class="btn-secondary">📤 นำเข้า</button>
+                <input type="file" id="fileInput" style="display: none;" accept=".json">
+            </div>
+        </header>
+
+        <!-- ================= หน้าที่ 1: ปฏิทิน ================= -->
+        <section id="page-calendar" class="page-content active">
+            <div class="month-selector-container">
+                <div class="month-selector">
+                    <button id="prevMonthBtn">◀</button>
+                    <div class="month-title-wrapper">
+                        <h2 id="currentMonthYear">มิถุนายน 2026</h2>
+                    </div>
+                    <button id="nextMonthBtn">▶</button>
+                </div>
+            </div>
+
+            <div class="summary-dashboard">
+                <div class="card"><small>รายรับเดือนนี้</small><p id="totalMonthIncome" class="text-success">0.00</p></div>
+                <div class="card"><small>รายจ่ายเดือนนี้</small><p id="totalMonthExpense" class="text-danger">0.00</p></div>
+                <div class="card"><small>ยอดสะสมเดือนนี้</small><p id="totalMonthBalance" class="text-primary">0.00</p></div>
+            </div>
+
+            <div class="calendar-container">
+                <div class="calendar-weekdays">
+                    <div>อา</div><div>จ</div><div>อ</div><div>พ</div><div>พฤ</div><div>ศ</div><div>ส</div>
+                </div>
+                <div id="calendarDays" class="calendar-days"></div>
+            </div>
+        </section>
+
+        <!-- ================= หน้าที่ 2: สถิติ (เพิ่มกล่องเลือกวันที่) ================= -->
+        <section id="page-stats" class="page-content">
+            <h2>📊 สถิติการเงิน</h2>
+            
+            <!-- ส่วนที่ 1: วงกลมสถิติด้านบน -->
+            <div class="stat-circle-section">
+                <div class="svg-container">
+                    <svg width="200" height="200" viewBox="0 0 200 200">
+                        <circle class="ring-bg" cx="100" cy="100" r="85" stroke-width="15" fill="none"/>
+                        <circle id="ringIncome" class="ring-segment text-primary" cx="100" cy="100" r="85" stroke-width="15" fill="none"/>
+                        <circle id="ringExpense" class="ring-segment text-danger" cx="100" cy="100" r="85" stroke-width="15" fill="none"/>
+                    </svg>
+                    <div class="circle-inner-text">
+                        <span id="circleIncomeText" class="text-primary">0</span>
+                        <hr class="circle-divider">
+                        <span id="circleExpenseText" class="text-danger">0</span>
+                    </div>
+                </div>
+            </div>
+
+            <!-- ส่วนที่ 2: ตัวกรองและเครื่องมือเลือกช่วงวันที่ -->
+            <div class="filter-wrapper">
+                <div class="filter-section">
+                    <button class="filter-btn active" data-filter="month">รายเดือน</button>
+                    <button class="filter-btn" data-filter="day">รายวัน</button>
+                    <button class="filter-btn" data-filter="week">รายสัปดาห์</button>
+                    <button class="filter-btn" data-filter="year">รายปี (เร็วๆ นี้)</button>
+                </div>
+                
+                <!-- กล่องเลือกช่วงวันที่แบบกำหนดเอง จะเปลี่ยนค่าอัตโนมัติตามปุ่มที่กด -->
+                <div class="date-picker-range">
+                    <div class="range-input-group">
+                        <label>📅 เริ่มตั้งแต่วันที่:</label>
+                        <input type="date" id="statStartDate">
+                    </div>
+                    <div class="range-input-group">
+                        <label>➡️ ถึงวันที่:</label>
+                        <input type="date" id="statEndDate">
+                    </div>
+                </div>
+            </div>
+
+            <!-- ส่วนที่ 3: ตารางแสดงผลด้านล่าง -->
+            <div class="stat-table-wrapper">
+                <table class="stat-table">
+                    <thead>
+                        <tr>
+                            <th>เวลา/วันที่</th>
+                            <th>รายรับ</th>
+                            <th>รายจ่าย</th>
+                            <th>คงเหลือ</th>
+                        </tr>
+                    </thead>
+                    <tbody id="statTableBody"></tbody>
+                </table>
+            </div>
+        </section>
+
+        <!-- ================= หน้าที่ 3: เป้าหมาย ================= -->
+        <section id="page-goals" class="page-content">
+            <h2>🎯 จัดการเป้าหมายการออมเงิน</h2>
+            <div class="goal-card">
+                <h3>✨ สร้างเป้าหมายใหม่</h3>
+                <div class="form-group"><label>1. ชื่อเป้าหมาย</label><input type="text" id="goalNameInput" placeholder="เช่น ซื้อหูฟังใหม่"></div>
+                <div class="form-group"><label>2. จำนวนเงินที่ต้องเก็บ (บาท)</label><input type="number" id="goalTargetInput" placeholder="0.00" min="0"></div>
+                <div class="form-group"><label>3. หมายเหตุ / กำหนดเวลาคร่าวๆ</label><textarea id="goalNoteInput" placeholder="ระบุหมายเหตุ..."></textarea></div>
+                <button id="createGoalBtn" class="btn-primary">➕ สร้างเป้าหมาย</button>
+            </div>
+
+            <div class="goal-sort-section">
+                <label>📌 เรียงตาม:</label>
+                <select id="goalSortSelect">
+                    <option value="time">เวลาในการสร้าง</option>
+                    <option value="date">วันเดือนปี</option>
+                    <option value="amount">จำนวนเงินเป้าหมาย</option>
+                    <option value="progress">ความคืบหน้า (%)</option>
+                </select>
+            </div>
+
+            <div id="activeGoalsList" class="goals-container-list"></div>
+            <hr class="section-divider">
+            <div class="history-section">
+                <h3>📜 ประวัติการใช้งานเป้าหมาย</h3>
+                <div id="historyGoalsList" class="goals-container-list"></div>
+            </div>
+        </section>
+
+        <!-- แถบเมนูด้านล่างสุด -->
+        <nav class="bottom-nav">
+            <button class="nav-item active" data-target="page-calendar">
+                <span class="nav-icon">📅</span><span class="nav-text">ตารางเงิน</span>
+            </button>
+            <button class="nav-item" data-target="page-stats">
+                <span class="nav-icon">📊</span><span class="nav-text">สถิติ</span>
+            </button>
+            <button class="nav-item" data-target="page-goals">
+                <span class="nav-icon">🎯</span><span class="nav-text">เป้าหมาย</span>
+            </button>
+        </nav>
+    </div>
+
+    <!-- หน้าต่างป๊อปอัปกรอกเงินปฏิทิน -->
+    <div id="recordModal" class="modal">
+        <div class="modal-content">
+            <span class="close-btn" onclick="closeElement('recordModal')">&times;</span>
+            <h3 id="modalTitle">บันทึกการเงิน</h3>
+            <p id="modalTime" class="time-label">เวลาบันทึกอัตโนมัติ: --:--:--</p>
+            <form id="financialForm">
+                <div class="form-group"><label>ยอดคงเหลือก่อนหน้า</label><input type="number" id="prevBalance" readonly value="0"></div>
+                <div class="form-group"><label>รายรับ (บาท)</label><input type="number" id="incomeInput" min="0" placeholder="0.00"></div>
+                <div class="form-group"><label>รายจ่าย (บาท)</label><input type="number" id="expenseInput" min="0" placeholder="0.00"></div>
+                <div class="form-group"><label>รายละเอียด / หมายเหตุ</label><textarea id="detailInput" placeholder="ระบุรายละเอียด..."></textarea></div>
+                <div class="calculation-preview">
+                    <div>สรุปผลวันนี้: <span id="dayNet">0.00</span></div>
+                    <div>ยอดคงเหลือหลัง: <span id="postBalance">0.00</span></div>
+                </div>
+                <button type="submit" class="btn-primary">💾 บันทึกข้อมูล</button>
+            </form>
+        </div>
+    </div>
+
+    <!-- หน้าต่างป๊อปอัปแก้ไขเป้าหมาย -->
+    <div id="editGoalModal" class="modal">
+        <div class="modal-content">
+            <span class="close-btn" onclick="closeElement('editGoalModal')">&times;</span>
+            <h3>✏️ แก้ไขเป้าหมาย</h3>
+            <div class="form-group"><label>ชื่อเป้าหมาย</label><input type="text" id="editGoalName"></div>
+            <div class="form-group"><label>จำนวนเงิน (บาท)</label><input type="number" id="editGoalTarget"></div>
+            <div class="form-group"><label>หมายเหตุ</label><textarea id="editGoalNote"></textarea></div>
+            <button id="submitEditGoalBtn" class="btn-primary">💾 บันทึกการแก้ไข</button>
+        </div>
+    </div>
+
+    <!-- หน้าต่างถามสิทธิ์อัปเดตเวลาตอนแก้ไขเป้าหมาย -->
+    <div id="confirmTimeModal" class="modal">
+        <div class="modal-content confirm-box">
+            <h3>⏰ ยืนยันการบันทึกเวลา</h3>
+            <p>คุณต้องการบันทึกเวลาปัจจุบันเป็นเวลาอัปเดตล่าสุดของเป้าหมายนี้หรือไม่?</p>
+            <div class="confirm-buttons">
+                <button id="confirmTimeYes" class="btn-primary">ใช่</button>
+                <button id="confirmTimeNo" class="btn-secondary">ไม่</button>
+            </div>
+        </div>
+    </div>
+
+    <script src="script.js"></script>
+</body>
+</html>
